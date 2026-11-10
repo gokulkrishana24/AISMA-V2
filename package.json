@@ -1,0 +1,14 @@
+{
+  "name": "ai-native-social-media-agent-team-v2",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix frontend run start",
+    "lint": "npm --prefix frontend run lint",
+    "test": "npm --prefix frontend run test",
+    "type-check": "npm --prefix frontend run type-check"
+  }
+}
+

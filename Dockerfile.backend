@@ -1,0 +1,53 @@
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app/src
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install python dependencies
+COPY pyproject.toml .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir \
+    fastapi \
+    uvicorn[standard] \
+    sqlalchemy \
+    alembic \
+    psycopg2-binary \
+    bcrypt \
+    pyjwt \
+    cryptography \
+    email-validator \
+    psutil \
+    pyyaml \
+    httpx \
+    pydantic
+
+# Copy project source, migrations, and config
+COPY src/ /app/src/
+COPY config/ /app/config/
+COPY migrations/ /app/migrations/
+COPY alembic.ini /app/alembic.ini
+
+# Create unprivileged non-root user and grant state/logs permissions
+RUN addgroup --system --gid 1001 aisma && \
+    adduser --system --uid 1001 --ingroup aisma aisma && \
+    mkdir -p /app/state /app/logs && \
+    chown -R aisma:aisma /app
+
+USER aisma
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8000/api/v1/ready || exit 1
+
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
